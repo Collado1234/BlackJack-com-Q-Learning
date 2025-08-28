@@ -1,63 +1,38 @@
-# env.py
-import abc
-import random
-from typing import List, Tuple, Any
+from q_learning import QLearningAgent
+from blackjack import Blackjack
+import matplotlib.pyplot as plt
 
-Card = int
-Hand = list[Card]   #mão do jogador ou do dealer
-State = tuple[int, int, bool]  # (player_sum, dealer_upcard, usable_ace)
+EPISODES = 50000
+REPORT_EVERY = 1000
 
-class AbstractGame(abc.ABC):
-    @abc.abstractmethod
-    def reset(self) -> Any:
-        pass
+env = Blackjack()
+agent = QLearningAgent(state_size=None, action_size=2)
 
-    @abc.abstractmethod
-    def step(self, action: int) -> Tuple[Any, float, bool, dict]:
-        pass
+rewards = []
+avg_rewards = []
 
-    @abc.abstractmethod
-    def get_valid_actions(self, state: Any) -> List[int]:
-        pass
+for episode in range(1, EPISODES+1):
+    state = env.reset()
+    total_reward = 0
+    done = False
 
-def draw_card() -> Card:
-    card = random.randint(1, 13) # 1-10 são valores normais, 11-13 são figuras (valem 10)
-    return min(card, 10)    
-    
+    while not done:
+        action = agent.choose_action(state)
+        next_state, reward, done = env.step(action)
+        agent.learn(state, action, reward, next_state, done)
+        state = next_state
+        total_reward += reward
 
+    rewards.append(total_reward)
 
+    if episode % REPORT_EVERY == 0:
+        avg_reward = sum(rewards[-REPORT_EVERY:]) / REPORT_EVERY
+        avg_rewards.append(avg_reward)
+        print(f"Episódio {episode}, Recompensa média: {avg_reward:.3f}, Epsilon: {agent.epsilon:.3f}")
 
-
-class BlackJackGame(AbstractGame):
-    def __init__(self):
-        self.state = None
-        self.done = False
-
-    def reset(self) -> Any:
-        self.state = (0, 0)  # Exemplo de estado inicial
-        self.done = False
-        return self.state
-
-    def step(self, action: int) -> Tuple[Any, float, bool, dict]:
-        if self.done:
-            raise Exception("O jogo terminou. Por favor, resete o ambiente.")
-        
-        # Lógica simplificada para o exemplo
-        if action == 1:  # Suponha que 1 é "hit"
-            self.state = (self.state[0] + 10, self.state[1])  # Adiciona 10 ao jogador
-        elif action == 0:  # Suponha que 0 é "stand"
-            self.done = True
-        
-        reward = 0.0
-        if self.state[0] > 21:
-            reward = -1.0
-            self.done = True
-        elif self.done:
-            reward = 1.0 if self.state[0] <= 21 else -1.0
-        
-        return self.state, reward, self.done, {}
-
-    def get_valid_actions(self, state: Any) -> List[int]:
-        if self.done:
-            return []
-        return [0, 1]  # Stand ou Hit
+# Plot do aprendizado
+plt.plot(range(0, EPISODES, REPORT_EVERY), avg_rewards)
+plt.xlabel("Episódios")
+plt.ylabel("Recompensa média")
+plt.title("Aprendizado do Agente Q-Learning no Blackjack")
+plt.show()
