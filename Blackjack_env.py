@@ -16,36 +16,50 @@ class BlackjackEnv(GameInterface):
         self.dealer_hand = [self.deck.draw(), self.deck.draw()]
         self.done = False
         return self.get_state(), 0, False, "Novo jogo iniciado."
+        
 
-    def step(self, action: int):
+    def step(self, action: int,strategy_option=True):
         if self.done:
             return self.get_state(), 0, True, "O jogo já terminou."
-        
+
         message = ""
         reward = 0
         
-        if action == 1: # Pedir carta (Hit)
+        if action == 1:  # Hit
             self.player_hand.append(self.deck.draw())
             player_val = self._hand_value(self.player_hand)
             message = f"Jogador pediu uma carta. Sua mão agora tem valor {player_val}."
+            
+            # Recompensa proporcional à proximidade de 21 (se não estourou)
+            if player_val <= 21:
+                reward += (player_val / 21) * 0.05  
+            
             if player_val > 21:
-                reward = -1
+                reward = -1.5
                 self.done = True
                 message += " Jogador estourou!"
             return self.get_state(), reward, self.done, message
 
-        elif action == 0: # Parar (Stick)
+        elif action == 0:  # Stick
             self.done = True
             
-            # Dealer joga
+            # Drug Dealer joga
             while self._hand_value(self.dealer_hand) < 17:
                 self.dealer_hand.append(self.deck.draw())
                 message += f"Dealer pegou uma carta. A mão do dealer agora é {self._hand_value(self.dealer_hand)}.\n"
             
-            reward, outcome = self._determine_winner()
+            final_reward, outcome = self._determine_winner()
+            player_val = self._hand_value(self.player_hand)
+            
+            # Bônus se jogador parou com 18–20, mesmo que perca
+            if player_val >= 18 and player_val <= 20:
+                final_reward += 0.2
+            
+            reward += final_reward
             message += f"Jogador parou. {outcome}"
             
-            return self.get_state(), reward, self.done, message            
+            return self.get_state(), reward, self.done, message
+          
     
     def get_state(self):
         player_sum = self._hand_value(self.player_hand)
