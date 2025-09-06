@@ -2,11 +2,15 @@ import numpy as np
 import random
 from Blackjack_env import BlackjackEnv
 from q_learning_agent import QLearningAgent
-import os.path
+import os
+
+# Garante que a pasta Q_tables existe
+Q_TABLE_DIR = "Q_tables"
+os.makedirs(Q_TABLE_DIR, exist_ok=True)
 
 def run_simulation(env, agent, num_games=100):
     """
-    Roda uma simulação e retorna as estatísticas de vitória, derrota e empate.
+    Roda uma simulação e retorna as estatísticas de vitória, derrota e empate. 
     """
     wins = 0
     losses = 0
@@ -30,7 +34,7 @@ def run_simulation(env, agent, num_games=100):
             
     return wins, losses, draws
 
-def train_and_evaluate(hyperparams, seed=42):
+def train_and_evaluate(hyperparams, seed=42): #testar diferentes seeds
     """
     Treina e avalia um agente com base em um conjunto de hiperparâmetros.
     Retorna a taxa de vitória e o aproveitamento.
@@ -45,8 +49,11 @@ def train_and_evaluate(hyperparams, seed=42):
         epsilon_decay=hyperparams['epsilon_decay'],
     )
     
-    # Cria um nome de arquivo único para esta configuração
-    filename = f"q_table_a{hyperparams['alpha']}_g{hyperparams['gamma']}_ed{hyperparams['epsilon_decay']}_e{hyperparams['num_episodes']}.pkl"
+    # Cria um nome de arquivo único para esta configuração dentro da pasta Q_tables
+    filename = os.path.join(
+        Q_TABLE_DIR,
+        f"q_table_a{hyperparams['alpha']}_g{hyperparams['gamma']}_ed{hyperparams['epsilon_decay']}_e{hyperparams['num_episodes']}.pkl"
+    )
 
     if os.path.exists(filename):
         print(f"Carregando {filename}...")
@@ -78,21 +85,49 @@ def train_and_evaluate(hyperparams, seed=42):
 
 if __name__ == "__main__":
     test_configs = [
-        # Configuração atual
-        {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
-        
-        # Mais episódios, menor decaimento
-        {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.9999, 'num_episodes': 5000000},
-        
-        # Maior taxa de aprendizado
-        {'alpha': 0.2, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
-        
-        # Menor taxa de aprendizado
-        {'alpha': 0.05, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
-        
-        # Maior fator de desconto
-        {'alpha': 0.1, 'gamma': 0.99, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
-    ]
+    # Configuração base
+    {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Mais episódios, menor decaimento
+    {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.9999, 'num_episodes': 5000000},
+
+    # Maior taxa de aprendizado
+    {'alpha': 0.2, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Menor taxa de aprendizado
+    {'alpha': 0.05, 'gamma': 0.9, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Maior fator de desconto
+    {'alpha': 0.1, 'gamma': 0.99, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Menor fator de desconto
+    {'alpha': 0.1, 'gamma': 0.8, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Aprendizado mais agressivo + mais episódios
+    {'alpha': 0.3, 'gamma': 0.9, 'epsilon_decay': 0.9997, 'num_episodes': 2000000},
+
+    # Aprendizado lento + muitos episódios
+    {'alpha': 0.01, 'gamma': 0.9, 'epsilon_decay': 0.9999, 'num_episodes': 5000000},
+
+    # Exploração alta por mais tempo
+    {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.99999, 'num_episodes': 5000000},
+
+    # Exploração curta (epsilon cai rápido)
+    {'alpha': 0.1, 'gamma': 0.9, 'epsilon_decay': 0.999, 'num_episodes': 500000},
+
+    # Muito aprendizado curto
+    {'alpha': 0.5, 'gamma': 0.9, 'epsilon_decay': 0.999, 'num_episodes': 200000},
+
+    # Gamma alto com mais aprendizado
+    {'alpha': 0.2, 'gamma': 0.99, 'epsilon_decay': 0.9997, 'num_episodes': 2000000},
+
+    # Gamma baixo para estratégias mais imediatistas
+    {'alpha': 0.1, 'gamma': 0.5, 'epsilon_decay': 0.9995, 'num_episodes': 1000000},
+
+    # Configuração “exploradora extrema”
+    {'alpha': 0.05, 'gamma': 0.95, 'epsilon_decay': 0.99999, 'num_episodes': 3000000},
+]
+
 
     results = []
     for config in test_configs:

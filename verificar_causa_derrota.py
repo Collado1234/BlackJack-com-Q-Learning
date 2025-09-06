@@ -2,7 +2,11 @@ import numpy as np
 import random
 from Blackjack_env import BlackjackEnv
 from q_learning_agent import QLearningAgent
-import os.path
+import os
+
+# Garante que a pasta Q_tables exista
+Q_TABLE_DIR = "Q_tables"
+os.makedirs(Q_TABLE_DIR, exist_ok=True)
 
 def run_simulation(env, agent, num_games=1000):
     """
@@ -52,8 +56,11 @@ def train_and_evaluate(hyperparams, seed=42):
         epsilon_decay=hyperparams['epsilon_decay'],
     )
     
-    # Cria um nome de arquivo único para esta configuração
-    filename = f"q_table_a{hyperparams['alpha']}_g{hyperparams['gamma']}_ed{hyperparams['epsilon_decay']}_e{hyperparams['num_episodes']}.pkl"
+    # Cria um nome de arquivo único para esta configuração dentro da pasta Q_tables
+    filename = os.path.join(
+        Q_TABLE_DIR,
+        f"q_table_a{hyperparams['alpha']}_g{hyperparams['gamma']}_ed{hyperparams['epsilon_decay']}_e{hyperparams['num_episodes']}.pkl"
+    )
 
     if os.path.exists(filename):
         print(f"Carregando {filename}...")
@@ -66,7 +73,6 @@ def train_and_evaluate(hyperparams, seed=42):
             
             while not done:
                 action = agent.choose_action(state)
-                # Correctly unpack the four values returned by env.step()
                 next_state, reward, done, _ = env.step(action) 
                 agent.learn(state, action, reward, next_state, done)
                 state = next_state
@@ -83,6 +89,8 @@ def train_and_evaluate(hyperparams, seed=42):
     utilization_rate = (points / max_points) * 100 if max_points > 0 else 0
     
     return win_rate, wins, losses, draws, utilization_rate, bust_losses, point_losses
+
+
 if __name__ == "__main__":
     test_configs = [
         # Configuração atual
