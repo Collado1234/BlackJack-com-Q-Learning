@@ -126,6 +126,9 @@ if __name__ == "__main__":
 
     # Configuração “exploradora extrema”
     {'alpha': 0.05, 'gamma': 0.95, 'epsilon_decay': 0.99999, 'num_episodes': 3000000},
+    
+    # Jogo completamente aleatório (sem aprendizado)
+    {'alpha': 0.0, 'gamma': 0.0, 'epsilon_decay': 1.0, 'num_episodes': 100000}
 ]
 
 

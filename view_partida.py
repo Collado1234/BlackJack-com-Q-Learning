@@ -2,48 +2,28 @@ from Blackjack_env import BlackjackEnv
 from q_learning_agent import QLearningAgent
 import numpy as np
 import random
-import os.path
 
 # -----------------
 # Configurações
-# -----------------cls
+# -----------------
 SEED = 42
-Q_TABLE_FILE = "q_table.pkl"
-NUM_EPISODES = 1000000
+NUM_EPISODES = 100000  # irrelevante, já que não há aprendizado
 ACTIONS = [0, 1] 
 
 random.seed(SEED)
 
-# Inicializa o ambiente e o agente
+# Inicializa o ambiente e o agente "sem aprendizado"
 env = BlackjackEnv(seed=SEED)
-agent = QLearningAgent(actions=ACTIONS)
+agent = QLearningAgent(
+    actions=ACTIONS,
+    alpha=0.0,          # Sem aprendizado
+    gamma=0.0,          # Irrelevante sem aprendizado
+    epsilon_start=1.0,  # Sempre aleatório
+    epsilon_end=1.0,    # Mantém epsilon = 1
+    epsilon_decay=1.0   # Não reduz exploração
+)
 
-# -----------------
-# Lógica de Treinamento
-# -----------------
-# Tenta carregar a tabela Q salva
-if not agent.load_q_table(Q_TABLE_FILE):
-    print("Iniciando treinamento...")
-    for episode in range(NUM_EPISODES):
-        state, _, _, _ = env.reset()
-        done = False
-
-        while not done:
-            action = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            agent.learn(state, action, reward, next_state, done)
-            state = next_state
-        
-        if (episode + 1) % 100000 == 0:
-            print(f"Episódio {episode + 1}/{NUM_EPISODES}, Epsilon: {agent.epsilon:.4f}")
-
-    print("\nTreinamento concluído!")
-    agent.save_q_table(Q_TABLE_FILE)
-
-# -----------------
-# Demonstração e Análise
-# -----------------
-print("\n--- Analisando o desempenho em 10 rodadas ---")
+print("\n--- Jogando 10 rodadas aleatórias (sem aprendizado) ---")
 for i in range(10):
     print(f"\n--- Rodada {i+1} ---")
     state, _, _, message = env.reset() 
@@ -55,14 +35,15 @@ for i in range(10):
     done = False
     
     while not done:
-        action = np.argmax(agent.q_table[state])
+        # Aqui o agente joga 100% aleatório
+        action = agent.choose_action(state)
         action_text = "Parar" if action == 0 else "Pedir Carta"
         
         print(f"Agente decidiu: {action_text}")
         
         next_state, reward, done, message = env.step(action)
         
-        # Se o agente pediu carta, mostra a nova mão
+        # Se pediu carta, mostra a nova mão
         if action == 1 and not done:
             player_hand, _ = env.get_hands()
             print(f"Sua nova mão: {[BlackjackEnv.format_card(card) for card in player_hand]}")
@@ -78,29 +59,24 @@ for i in range(10):
         
     print(f"Recompensa final: {reward}")
 
-    # -----------------
+# -----------------
 # Simulação Avançada
 # -----------------
-print("\n--- Simulação Avançada ---")
-print("Rodando 100 jogos para avaliar o desempenho...")
+print("\n--- Simulação Avançada (100 jogos aleatórios) ---")
 
-# Variáveis para contabilizar os resultados
 wins = 0
 losses = 0
 draws = 0
 
-# Loop de simulação
 for i in range(100):
     state, _, _, _ = env.reset()
     done = False
     
     while not done:
-        # O agente sempre explora a melhor ação
-        action = np.argmax(agent.q_table[state])
+        action = agent.choose_action(state)  # sempre aleatório
         next_state, reward, done, _ = env.step(action)
         state = next_state
         
-    # Contabiliza o resultado do jogo
     if reward > 0:
         wins += 1
     elif reward < 0:
@@ -108,7 +84,7 @@ for i in range(100):
     else:
         draws += 1
 
-# Exibe o relatório final
+# Relatório final
 total_games = wins + losses + draws
 win_rate = (wins / total_games) * 100 if total_games > 0 else 0
 print("\n--- Relatório Final ---")
