@@ -4,7 +4,7 @@ from Deck import Deck, Card
 
 class BlackjackEnv(GameInterface):
     def __init__(self, seed: int = None):
-        self.rng = random.Random(seed)
+        self.rng = random.Random(seed)       
         self.deck = Deck(self.rng)
         self.player_hand: list[Card] = []
         self.dealer_hand: list[Card] = []
@@ -29,10 +29,9 @@ class BlackjackEnv(GameInterface):
             self.player_hand.append(self.deck.draw())
             player_val = self._hand_value(self.player_hand)
             message = f"Jogador pediu uma carta. Sua mão agora tem valor {player_val}."
-            
-            # Recompensa proporcional à proximidade de 21 (se não estourou)
+                        
             if player_val <= 21:
-                reward += (player_val / 21) * 0.05  
+                reward += (player_val / 21) * 0.05   #implementa recompensas intermediárias para incentivar o agente a chegar perto de 21 sem estourar
             
             if player_val > 21:
                 reward = -1.5
@@ -67,11 +66,10 @@ class BlackjackEnv(GameInterface):
         usable_ace = any(card.rank == 1 for card in self.player_hand) and player_sum <= 11
         return (player_sum, dealer_card_value, usable_ace)
 
-    def get_hands(self):
-        # Retorna as cartas exatas do jogador e do dealer
+    def get_hands(self): # Retorna as cartas exatas do jogador e do dealer        
         return self.player_hand, self.dealer_hand
     
-    # Adicione uma função para formatar a carta de forma legível
+    # função para formatar as cartas
     @staticmethod
     def format_card(card: Card):
         ranks = {1: 'Ás', 11: 'Valete', 12: 'Dama', 13: 'Rei'}
@@ -110,10 +108,17 @@ class BlackjackEnv(GameInterface):
                 return -1, "Dealer venceu."
             else:
                 return 0, "Empate."
+class CasinoAgent:
+    def __init__(self):
+        pass
 
-   
-
-    
+    def choose_action(self, state):
+        player_sum, dealer_card, usable_ace = state
+        # Estratégia do cassino: pedir até ter 17 ou mais
+        if player_sum < 17:
+            return 1  # pedir carta
+        else:
+            return 0  # parar
 
     
 

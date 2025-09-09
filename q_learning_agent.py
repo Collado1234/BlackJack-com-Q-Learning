@@ -4,7 +4,7 @@ from collections import defaultdict
 import pickle 
 
 class QLearningAgent:    
-    def __init__(self,
+    def __init__(self,   #padrão se não tiver passado nada por param
                  actions: list,
                  alpha: float = 0.1,
                  gamma: float = 0.9,
@@ -20,13 +20,13 @@ class QLearningAgent:
         self.q_table = defaultdict(lambda: np.zeros(len(actions)))
 
 
-    def choose_action(self, state):
+    def choose_action(self, state):  #aqui é onde define a explração
         if random.random() < self.epsilon:
             return random.choice(self.actions)
         else:
             return np.argmax(self.q_table[state])
         
-    def learn(self, state, action, reward, next_state, done):
+    def learn(self, state, action, reward, next_state, done): #atualiza a tabela Q
         current_q = self.q_table[state][action]
         max_future_q = 0 if done else np.max(self.q_table[next_state])
         
@@ -52,3 +52,25 @@ class QLearningAgent:
         except FileNotFoundError:
             print(f"Arquivo {filename} não encontrado. Iniciando novo treinamento.")
             return False
+
+    def evaluate_agent(agent, env, num_games=1000):
+        wins, losses, draws = 0, 0, 0
+
+        for _ in range(num_games):
+            state, _, _, _ = env.reset()
+            done = False
+
+            while not done:
+                action = agent.choose_action(state)
+                state, reward, done, _ = env.step(action)
+
+            if reward > 0:
+                wins += 1
+            elif reward < 0:
+                losses += 1
+            else:
+                draws += 1
+
+        total = wins + losses + draws
+        win_rate = wins / total * 100
+        return wins, losses, draws, win_rate

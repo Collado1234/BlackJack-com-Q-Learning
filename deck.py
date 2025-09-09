@@ -17,10 +17,9 @@ class Deck:
         
     def draw(self):
         if not self.cards:
-            self.reset()  # baralho acabou → reembaralha
+            self.reset()  # baralho acabou reembaralha
         return self.cards.pop()
     
     @staticmethod
-    def card_value(card: Card) -> int:
-        # Ás = 1 (ou 11, mas isso é tratado no jogo, não no baralho)
+    def card_value(card: Card) -> int: #O valor da carta (Ás=1 ou 11, figuras=10) mas cisso tá no blackjack_env        
         return min(card.rank, 10)
